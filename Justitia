@@ -1,0 +1,54 @@
+import pandas as pd
+
+class Trade():
+    def __init__(self):
+        self.entryTime = 0
+        self.entryPrice = 0
+        self.exitTime = 0
+        self.exitPrice = 0
+        self.position = 0
+
+    def getProfit(self):
+        return self.position*(self.exitPrice - self.entryPrice)
+
+
+
+class MCReport_parser():
+    def __init__(self, fileName):
+        self.fileName = fileName
+        self.listOfTrade = ''
+        self.trades = []
+        self.parse()
+
+    def parse(self):
+        self.listOfTrade = pd.read_excel(io=path, sheetname='List of Trades', skiprows=2)
+        trades = []
+        for index, row in self.listOfTrade.iterrows():
+            tradeTime = pd.Timestamp.combine(row['Date'], row['Time'])
+            tradeType = row['Type']
+            if 'Entry' in tradeType:
+                # New trade
+                trade = Trade()
+                trades.append(trade)
+                trade.entryTime = tradeTime
+                trade.entryPrice = row['Price']
+                if 'Long' in tradeType:
+                    trade.position = 1 * int(row['Contracts'])
+                else:
+                    trade.position = -1 * int(row['Contracts'])
+            else:
+                # Closing trade
+                trade.exitTime = tradeTime
+                trade.exitPrice = row['Price']
+        self.trades = trades
+
+    def dump(self):
+        for trade in self.trades:
+            print(trade.getProfit())
+
+
+if __name__ == "__main__":
+    path = r'C:\D\DORF\Justitia\reports\TXF1  MH_Bollinger Back-Testing Strategy Performance Report.xlsx'
+    report = MCReport_parser(path)
+    report.dump()
+
