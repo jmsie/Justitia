@@ -87,7 +87,7 @@ class Justitia():
     def plotAllTrade(self):
         profits = self.cumsum(self.getProfits(self.allTrades))
         timeStamps = self.getTimeStamps(self.allTrades)
-        plt = pyplot
+
         plt.plot(timeStamps, profits)
         plt.show()
         plt.close()
@@ -122,3 +122,4 @@ if __name__ == "__main__":
 
     justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
     justitia.plotTrainTestTrades()
+    justitia.plotAllTrade()
