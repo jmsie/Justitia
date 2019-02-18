@@ -1,16 +1,22 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
 
 class Trade():
     def __init__(self):
         self.entryTime = 0
+        self.entryTimeStamp = 0
         self.entryPrice = 0
-        self.exitTime = 0
+        self.exitTimeStamp = 0
         self.exitPrice = 0
         self.position = 0
 
     def getProfit(self):
-        return self.position*(self.exitPrice - self.entryPrice)
-
+        if self.exitTime != 0:
+            return self.position * (self.exitPrice - self.entryPrice)
+        else:
+            return 0
 
 
 class MCReport_parser():
@@ -25,12 +31,14 @@ class MCReport_parser():
         trades = []
         for index, row in self.listOfTrade.iterrows():
             tradeTime = pd.Timestamp.combine(row['Date'], row['Time'])
+            tradeTimeStamp = tradeTime.timestamp()
             tradeType = row['Type']
             if 'Entry' in tradeType:
                 # New trade
                 trade = Trade()
                 trades.append(trade)
                 trade.entryTime = tradeTime
+                trade.entryTimeStamp = tradeTimeStamp
                 trade.entryPrice = row['Price']
                 if 'Long' in tradeType:
                     trade.position = 1 * int(row['Contracts'])
@@ -39,16 +47,78 @@ class MCReport_parser():
             else:
                 # Closing trade
                 trade.exitTime = tradeTime
+                trade.exitTimeStamp = tradeTimeStamp
                 trade.exitPrice = row['Price']
         self.trades = trades
 
-    def dump(self):
-        for trade in self.trades:
-            print(trade.getProfit())
+
+class Justitia():
+    def __init__(self):
+        self.allTrades = ""
+        self.trainTrades = []
+        self.testTrades = []
+
+    # This function splits the report by time into train and test
+    def splitTrades(self, timeStamp):
+        for trade in self.allTrades:
+            if trade.exitTimeStamp < timeStamp:
+                self.trainTrades.append(trade)
+            else:
+                self.testTrades.append(trade)
+
+    def getProfits(self, trades):
+        profits = []
+        for trade in trades:
+            profits.append(trade.getProfit())
+        return profits
+
+    def getTimeStamps(self, trades):
+        timeStamp = []
+        for trade in trades:
+            timeStamp.append(trade.exitTimeStamp)
+        return timeStamp
+
+    def cumsum(self, nums, offset=0):
+        ret = [offset]
+        for num in nums:
+            ret.append(num + ret[-1])
+        return ret[1:]
+
+    def plotAllTrade(self):
+        profits = self.cumsum(self.getProfits(self.allTrades))
+        timeStamps = self.getTimeStamps(self.allTrades)
+        plt = pyplot
+        plt.plot(timeStamps, profits)
+        plt.show()
+        plt.close()
+
+    def plotTrainTestTrades(self):
+        if self.trainTrades == []:
+            print("No training data found, use splitTrades() first")
+            return
+
+        trainProfits = self.cumsum(self.getProfits(self.trainTrades))
+        trainTimeStamps = self.getTimeStamps(self.trainTrades)
+        testProfits = self.cumsum(self.getProfits(self.testTrades), trainProfits[-1])
+        testTimeStamps = self.getTimeStamps(self.testTrades)
+
+        mpl.style.use("seaborn")
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_title('Train/Test plot')
+
+        plt.plot(trainTimeStamps, trainProfits)
+        plt.plot(testTimeStamps, testProfits)
+
+        plt.show()
+        plt.close()
 
 
 if __name__ == "__main__":
     path = r'C:\D\DORF\Justitia\reports\TXF1  MH_Bollinger Back-Testing Strategy Performance Report.xlsx'
+    splitTime = '2017-01-01'
     report = MCReport_parser(path)
-    report.dump()
+    justitia = Justitia()
+    justitia.allTrades = report.trades
 
+    justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
+    justitia.plotTrainTestTrades()
