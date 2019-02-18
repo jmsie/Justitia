@@ -90,7 +90,6 @@ class Justitia():
 
         plt.plot(timeStamps, profits)
         plt.show()
-        plt.close()
 
     def plotTrainTestTrades(self):
         if self.trainTrades == []:
@@ -110,7 +109,6 @@ class Justitia():
         plt.plot(testTimeStamps, testProfits)
 
         plt.show()
-        plt.close()
 
 
 if __name__ == "__main__":
