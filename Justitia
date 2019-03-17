@@ -20,17 +20,20 @@ class Trade():
             return 0
 
 
-class MCReport_parser():
-    def __init__(self, fileName):
-        self.fileName = fileName
-        self.listOfTrade = ''
-        self.trades = []
-        self.parse()
 
-    def parse(self):
-        self.listOfTrade = pd.read_excel(io=path, sheetname='List of Trades', skiprows=2)
+
+
+
+class Justitia():
+    def __init__(self):
+        self.allTrades = ""
+        self.trainTrades = []
+        self.testTrades = []
+
+    def parseMCReport(self, reportFile):
+        listOfTrade = pd.read_excel(io=path, sheetname='List of Trades', skiprows=2)
         trades = []
-        for index, row in self.listOfTrade.iterrows():
+        for index, row in listOfTrade.iterrows():
             tradeTime = pd.Timestamp.combine(row['Date'], row['Time'])
             tradeTimeStamp = tradeTime.timestamp()
             tradeType = row['Type']
@@ -50,14 +53,7 @@ class MCReport_parser():
                 trade.exitTime = tradeTime
                 trade.exitTimeStamp = tradeTimeStamp
                 trade.exitPrice = row['Price']
-        self.trades = trades
-
-
-class Justitia():
-    def __init__(self):
-        self.allTrades = ""
-        self.trainTrades = []
-        self.testTrades = []
+        self.allTrades = trades
 
     # This function splits the report by time into train and test
     def splitTrades(self, timeStamp):
@@ -170,9 +166,8 @@ if __name__ == "__main__":
     path = r'C:\D\DORF\Justitia\reports\TXF1  MH_Bollinger Back-Testing Strategy Performance Report.xlsx'
     path = r'C:\D\DORF\Justitia\reports\TXF1  MH_VOLEX Back-Testing Strategy Performance Report.xlsx'
     splitTime = '2017-01-01'
-    report = MCReport_parser(path)
     justitia = Justitia()
-    justitia.allTrades = report.trades
+    justitia.parseMCReport(path)
 
     justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
     # justitia.plotTrainTestTrades()
