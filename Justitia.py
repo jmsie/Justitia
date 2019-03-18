@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from sklearn import linear_model
-
+import os
 
 
 class Trade():
@@ -26,7 +26,7 @@ class Trade():
 
 
 class Justitia():
-    def __init__(self):
+    def __init__(self, name):
         self.allTrades = ""
         self.trainTrades = []
         self.trainProfits = []
@@ -36,10 +36,11 @@ class Justitia():
         self.testTimeStamps = []
         self.statistics = []
         self.textXY = []
+        self.name = name
 
         mpl.style.use("seaborn")
-        fig, ax = plt.subplots(figsize=(10, 10))
-        ax.set_title('Train/Test plot')
+        fig, ax = plt.subplots(figsize=(15, 15))
+        ax.set_title(self.name)
 
     def parseMCReport(self, reportFile):
         listOfTrade = pd.read_excel(io=path, sheetname='List of Trades', skiprows=2)
@@ -101,15 +102,12 @@ class Justitia():
     def plotAllTrade(self):
         profits = self.cumsum(self.getProfits(self.allTrades))
         timeStamps = self.getTimeStamps(self.allTrades)
-
         plt.plot(timeStamps, profits)
 
     def plotTrainTestTrades(self):
         if self.trainTrades == []:
             print("No training data found, use splitTrades() first")
             return
-
-
         plt.plot(self.trainTimeStamps, self.trainAccount)
         plt.plot(self.testTimeStamps, self.testAccount)
 
@@ -207,20 +205,23 @@ class Justitia():
         return netProfit / len(data)
 
 if __name__ == "__main__":
-    path = r'./reports/TXF1  MH_Bollinger Back-Testing Strategy Performance Report.xlsx'
-    path = r'./reports/TXF1  MH_VOLEX Back-Testing Strategy Performance Report.xlsx'
-    splitTime = '2017-01-01'
-    justitia = Justitia()
-    justitia.parseMCReport(path)
+    splitTime = '2018-01-01'
 
-    justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
-    justitia.plotTrainTestTrades()
+    os.chdir('./reports')
+    paths = os.listdir('.')
+    for path in paths:
+        justitia = Justitia(path.split(" ")[2])
 
-    justitia.linearAnalysis()
-    justitia.pfAnalysis()
-    justitia.winningRateAnalysis()
-    #justitia.sharpAnalysis()
-    justitia.expectationAnalysis()
+        justitia.parseMCReport(path)
 
-    justitia.plotStatistics()
-    justitia.savePlot("")
+        justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
+        justitia.plotTrainTestTrades()
+
+        justitia.linearAnalysis()
+        justitia.pfAnalysis()
+        justitia.winningRateAnalysis()
+        #justitia.sharpAnalysis()
+        justitia.expectationAnalysis()
+
+        justitia.plotStatistics()
+        justitia.savePlot("")
