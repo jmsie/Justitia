@@ -73,9 +73,11 @@ class Justitia():
                 self.trainTrades.append(trade)
             else:
                 self.testTrades.append(trade)
-        self.trainProfits = self.cumsum(self.getProfits(self.trainTrades))
+        self.trainProfits = self.getProfits(self.trainTrades)
+        self.trainAccount = self.cumsum(self.trainProfits)
         self.trainTimeStamps = self.getTimeStamps(self.trainTrades)
-        self.testProfits = self.cumsum(self.getProfits(self.testTrades), self.trainProfits[-1])
+        self.testProfits = self.getProfits(self.testTrades)
+        self.testAccount = self.cumsum(self.testProfits, self.trainAccount[-1])
         self.testTimeStamps = self.getTimeStamps(self.testTrades)
 
     def getProfits(self, trades):
@@ -108,8 +110,8 @@ class Justitia():
             return
 
 
-        plt.plot(self.trainTimeStamps, self.trainProfits)
-        plt.plot(self.testTimeStamps, self.testProfits)
+        plt.plot(self.trainTimeStamps, self.trainAccount)
+        plt.plot(self.testTimeStamps, self.testAccount)
 
 
     def linearAnalysis(self):
@@ -127,21 +129,21 @@ class Justitia():
         regr = linear_model.LinearRegression()
 
         # Train the train data
-        regr.fit(trainTimeStamps, self.trainProfits)
+        regr.fit(trainTimeStamps, self.trainAccount)
         trainCoef = float(regr.coef_[0]) * 100000
         # Make predictions using the testing set
         trainPredict = regr.predict(trainTimeStamps)
 
         # Train the test data
-        regr.fit(testTimeStamps, self.testProfits)
+        regr.fit(testTimeStamps, self.testAccount)
         testCoef = float(regr.coef_[0]) * 100000
         # Make predictions using the testing set
         testPredict = regr.predict(testTimeStamps)
 
-        trainMSE = mean_squared_error(self.trainProfits, trainPredict)
-        testMSE = mean_squared_error(self.testProfits, testPredict)
-        trainR2 = r2_score(self.trainProfits, trainPredict)
-        testR2 = r2_score(self.testProfits, testPredict)
+        trainMSE = mean_squared_error(self.trainAccount, trainPredict)
+        testMSE = mean_squared_error(self.testAccount, testPredict)
+        trainR2 = r2_score(self.trainAccount, trainPredict)
+        testR2 = r2_score(self.testAccount, testPredict)
 
         plt.plot(trainTimeStamps, trainPredict)
         plt.plot(testTimeStamps, testPredict)
@@ -150,7 +152,7 @@ class Justitia():
         self.statistics += "Variance score: train: {:.6f}  test: {:.6f} \n".format(trainR2, testR2)
         self.statistics += "Slope: train: {:.6f}  test: {:.6f} \n".format(trainCoef, testCoef)
 
-        plt.text(self.trainTimeStamps[1], self.testProfits[0], self.statistics, fontsize=12)
+        plt.text(self.trainTimeStamps[1], self.testAccount[0], self.statistics, fontsize=12)
 
     def savePlot(self, path):
         plt.show()
