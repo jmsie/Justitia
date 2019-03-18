@@ -197,9 +197,14 @@ class Justitia():
 
         return winTrade/len(data)
 
+    def expectationAnalysis(self):
+        trainE = self.getExpectation(self.trainProfits)
+        testE = self.getExpectation(self.testProfits)
+        self.statistics.append(["Expectation", trainE, testE])
 
     def getExpectation(self, data):
-        pass
+        netProfit = self.cumsum(data)[-1]
+        return netProfit / len(data)
 
 if __name__ == "__main__":
     path = r'./reports/TXF1  MH_Bollinger Back-Testing Strategy Performance Report.xlsx'
@@ -210,8 +215,12 @@ if __name__ == "__main__":
 
     justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
     justitia.plotTrainTestTrades()
+
     justitia.linearAnalysis()
     justitia.pfAnalysis()
     justitia.winningRateAnalysis()
+    #justitia.sharpAnalysis()
+    justitia.expectationAnalysis()
+
     justitia.appendStatistics()
     justitia.savePlot("")
