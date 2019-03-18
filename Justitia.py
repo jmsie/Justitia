@@ -171,8 +171,7 @@ class Justitia():
     def pfAnalysis(self):
         trainPF = self.getPF(self.trainProfits)
         testPF = self.getPF(self.testProfits)
-        print(trainPF)
-        print(testPF)
+        self.statistics.append(["PF", trainPF, testPF])
 
     def getPF(self, data):
         grossProfit = 0
@@ -185,8 +184,19 @@ class Justitia():
         grossLost = grossLost * (-1)
         return grossProfit/grossLost
 
+    def winningRateAnalysis(self):
+        trainWiningRate = self.getWinningRate(self.trainProfits)
+        testWiningRate = self.getWinningRate(self.testProfits)
+        self.statistics.append(["Winning Rate", trainWiningRate, testWiningRate])
+
     def getWinningRate(self, data):
-        pass
+        winTrade = 0.0
+        for profit in data:
+            if profit > 0:
+                winTrade += 1.0
+
+        return winTrade/len(data)
+
 
     def getExpectation(self, data):
         pass
@@ -202,5 +212,6 @@ if __name__ == "__main__":
     justitia.plotTrainTestTrades()
     justitia.linearAnalysis()
     justitia.pfAnalysis()
+    justitia.winningRateAnalysis()
     justitia.appendStatistics()
     justitia.savePlot("")
