@@ -164,8 +164,22 @@ class Justitia():
     def getSharp(self, data):
         pass
 
+    def pfAnalysis(self):
+        trainPF = self.getPF(self.trainProfits)
+        testPF = self.getPF(self.testProfits)
+        print(trainPF)
+        print(testPF)
+
     def getPF(self, data):
-        pass
+        grossProfit = 0
+        grossLost = 0
+        for profit in data:
+            if profit > 0:
+                grossProfit += profit
+            else:
+                grossLost += profit
+        grossLost = grossLost * (-1)
+        return grossProfit/grossLost
 
     def getWinningRate(self, data):
         pass
@@ -181,6 +195,7 @@ if __name__ == "__main__":
     justitia.parseMCReport(path)
 
     justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
-    justitia.plotTrainTestTrades()
-    justitia.linearAnalysis()
+    #justitia.plotTrainTestTrades()
+    #justitia.linearAnalysis()
+    justitia.pfAnalysis()
     justitia.savePlot("")
