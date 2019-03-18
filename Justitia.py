@@ -34,7 +34,7 @@ class Justitia():
         self.testTrades = []
         self.testProfits = []
         self.testTimeStamps = []
-        self.statistics = ""
+        self.statistics = []
         self.textXY = []
 
         mpl.style.use("seaborn")
@@ -148,11 +148,15 @@ class Justitia():
         plt.plot(trainTimeStamps, trainPredict)
         plt.plot(testTimeStamps, testPredict)
 
-        self.statistics += "Mean square error: train: {:.4f}  test: {:.4f} \n".format(trainMSE, testMSE)
-        self.statistics += "Variance score: train: {:.6f}  test: {:.6f} \n".format(trainR2, testR2)
-        self.statistics += "Slope: train: {:.6f}  test: {:.6f} \n".format(trainCoef, testCoef)
+        self.statistics.append(["Mean square error", trainMSE, testMSE])
+        self.statistics.append(["Variance", trainR2, testR2])
+        self.statistics.append(["Slope", trainCoef, testCoef])
 
-        plt.text(self.trainTimeStamps[1], self.testAccount[0], self.statistics, fontsize=12)
+    def appendStatistics(self):
+        info = ""
+        for stat in self.statistics:
+            info += stat[0] + "   train:" + str(stat[1]) + " test: " + str(stat[2]) + "\n"
+        plt.text(self.trainTimeStamps[1], self.testAccount[0], info, fontsize=12)
 
     def savePlot(self, path):
         plt.show()
@@ -195,7 +199,8 @@ if __name__ == "__main__":
     justitia.parseMCReport(path)
 
     justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
-    #justitia.plotTrainTestTrades()
-    #justitia.linearAnalysis()
+    justitia.plotTrainTestTrades()
+    justitia.linearAnalysis()
     justitia.pfAnalysis()
+    justitia.appendStatistics()
     justitia.savePlot("")
