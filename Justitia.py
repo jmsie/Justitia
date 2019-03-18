@@ -152,7 +152,7 @@ class Justitia():
         self.statistics.append(["Variance", trainR2, testR2])
         self.statistics.append(["Slope", trainCoef, testCoef])
 
-    def appendStatistics(self):
+    def plotStatistics(self):
         info = ""
         for stat in self.statistics:
             info += stat[0] + "   train:" + str(stat[1]) + " test: " + str(stat[2]) + "\n"
@@ -222,5 +222,5 @@ if __name__ == "__main__":
     #justitia.sharpAnalysis()
     justitia.expectationAnalysis()
 
-    justitia.appendStatistics()
+    justitia.plotStatistics()
     justitia.savePlot("")
