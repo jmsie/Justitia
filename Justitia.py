@@ -156,15 +156,22 @@ class Justitia():
             info += stat[0] + "   train:" + str(stat[1]) + " test: " + str(stat[2]) + "\n"
         plt.text(self.trainTimeStamps[1], self.testAccount[0], info, fontsize=12)
 
-    def savePlot(self, path):
-        plt.show()
-        pass
+    def savePlot(self):
+        #plt.show()
+        plt.savefig("../out/" + self.name + ".png", dpi=600, format="png")
 
     def getBeta(self, data):
         pass
 
-    def getSharp(self, data):
-        pass
+    # Input the risk free return
+    def sharpAnalysis(self, Rf):
+        trainSharp = self.getSharp(self.trainProfits, Rf)
+        testSharp = self.getSharp(self.testProfits, Rf)
+        self.statistics.append(["Sharp", trainSharp, testSharp])
+
+    def getSharp(self, data, Rf):
+        # [E(Rp)－Rf]/σp
+        return 0
 
     def pfAnalysis(self):
         trainPF = self.getPF(self.trainProfits)
@@ -180,6 +187,8 @@ class Justitia():
             else:
                 grossLost += profit
         grossLost = grossLost * (-1)
+        if grossLost == 0:
+          return float("inf")
         return grossProfit/grossLost
 
     def winningRateAnalysis(self):
@@ -188,6 +197,8 @@ class Justitia():
         self.statistics.append(["Winning Rate", trainWiningRate, testWiningRate])
 
     def getWinningRate(self, data):
+        if len(data) == 0:
+          return float("inf")
         winTrade = 0.0
         for profit in data:
             if profit > 0:
@@ -200,28 +211,95 @@ class Justitia():
         testE = self.getExpectation(self.testProfits)
         self.statistics.append(["Expectation", trainE, testE])
 
+    def netProfitAnalysis(self, bigPointValue):
+        trainP = self.getNetProfit(self.trainProfits, bigPointValue)
+        testP = self.getNetProfit(self.testProfits, bigPointValue)
+        self.statistics.append(["netProfit", trainP, testP])
+
     def getExpectation(self, data):
+        if len(data) == 0:
+          return float("inf")
         netProfit = self.cumsum(data)[-1]
         return netProfit / len(data)
 
+    def MDDAnalysis(self):
+        trainMDD = self.getMDD(self.trainAccount)
+        testMDD = self.getMDD(self.testAccount)
+        self.statistics.append(["MDD", trainMDD, testMDD])
+
+    def getMDD(self, data):
+        recordHeigh = float('-inf')
+        MDD = float('-inf')
+        for balance in data:
+            recordHeigh = max(recordHeigh, balance)
+            MDD = max(MDD, recordHeigh - balance)
+        return MDD
+
+    def getNetProfit(self, data, bigPointValue, fee=0):
+        ticks = sum(data) - fee * len(data)
+        grossProfit = ticks*bigPointValue
+        return grossProfit - fee*bigPointValue
+
+
 if __name__ == "__main__":
-    splitTime = '2018-01-01'
+    splitTime = '2019-04-01'
 
-    os.chdir('./reports')
+    os.chdir('./report')
     paths = os.listdir('.')
+
+    result = []
+    profit = []
+    pathCount = 1
     for path in paths:
-        justitia = Justitia(path.split(" ")[2])
+        print("Working on: " + str(pathCount) + "/" + str(len(paths)) + " " + path)
+        pathCount += 1
+        name = path.split(" ")[2]
 
+        justitia = Justitia(name)
         justitia.parseMCReport(path)
-
         justitia.splitTrades(pd.to_datetime(splitTime).timestamp())
-        justitia.plotTrainTestTrades()
 
         justitia.linearAnalysis()
         justitia.pfAnalysis()
         justitia.winningRateAnalysis()
-        #justitia.sharpAnalysis()
+        #justitia.sharpAnalysis(0.02)
         justitia.expectationAnalysis()
+        justitia.MDDAnalysis()
+        justitia.netProfitAnalysis(50)
 
+        justitia.plotTrainTestTrades()
         justitia.plotStatistics()
-        justitia.savePlot("")
+        justitia.savePlot()
+        result.append([name, justitia.statistics])
+
+    # Dump in CVS format
+    with open('../out/reports.csv', 'w+') as fd:
+        # Write columns
+        index = 'name, '
+        for columnName in result[0][1]:
+          index += columnName[0] + " train," + columnName[0] + " test, "
+        index += '\n'
+        fd.write(index)
+
+        for name, stats in result:
+            statString = name + ', '
+            for stat in stats:
+                statString = statString + str(stat[1]) + ", " + str(stat[2]) + ", "
+            statString += '\n'
+            fd.write(statString)
+
+
+
+
+
+    '''
+    with open('../out/reports.txt','w+') as fd:
+        for stat in statistics:
+            info = stat[0] + "\n"
+            for data in stat[1]:
+                info += '\t' + str(data[0])
+                info += '\t\t' + str(data[1])
+                info += '\t\t' + str(data[2])
+                info += '\n'
+            fd.write(info)
+      '''
